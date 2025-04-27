@@ -1,0 +1,238 @@
+// File: src\windows\main\mainStyles.module.scss
+
+// --- Variables (Optional but helpful) ---
+$primary-text-color: rgba(240, 240, 240, 0.95);
+$secondary-text-color: rgba(180, 180, 180, 0.85);
+$border-color: rgba(255, 255, 255, 0.2);
+$background-color: rgba(
+  15,
+  23,
+  42,
+  0.8
+); // Slightly darker, less transparent base
+$header-background: rgba(25, 35, 55, 0.85);
+$row-hover-background: rgba(40, 50, 70, 0.9);
+$row-even-background: rgba(20, 28, 48, 0.8);
+
+// --- Base Container ---
+.main {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; // Use viewport height
+  width: 100vw; // Use viewport width
+  background-color: $background-color;
+  // outline: 1px solid $border-color; // Outline might be too harsh, consider removing or softening
+  // border-radius: 4px; // Keep if you like rounded corners
+  color: $primary-text-color;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+    Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; // System font stack
+  overflow: hidden; // Prevent body scroll, manage scrolling inside .standings
+}
+
+// --- Loading State ---
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  font-size: 1.2rem;
+  color: $secondary-text-color;
+  background-color: $background-color;
+}
+
+// --- Header ---
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; // Center items vertically
+  padding: 12px 15px; // Slightly more padding
+  background-color: $header-background;
+  border-bottom: 1px solid $border-color;
+  // border-radius: 4px 4px 0 0; // Only if .main has border-radius
+  flex-shrink: 0; // Prevent header from shrinking
+
+  p {
+    margin: 0;
+  }
+
+  .trackInfo {
+    // Container for track details
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px; // Small gap between track/config
+  }
+
+  .trackName {
+    font-size: 1.3rem; // Slightly larger track name
+    font-weight: 500;
+    color: $primary-text-color;
+    line-height: 1.2;
+  }
+
+  .trackConfig {
+    font-size: 0.9rem;
+    font-weight: 300;
+    color: $secondary-text-color;
+    line-height: 1.1;
+  }
+
+  .sessionDetails {
+    // Container for temp/event type
+    display: flex;
+    align-items: center; // Align items on the right
+    gap: 15px; // Space between temp and event type
+    text-align: right;
+  }
+
+  .temp,
+  .eventType {
+    font-size: 0.95rem;
+    font-weight: 400;
+    color: $secondary-text-color;
+  }
+
+  .temp {
+    font-variant-numeric: tabular-nums; // Align numbers nicely
+  }
+}
+
+// --- Standings Container ---
+.standings {
+  flex-grow: 1; // Allow standings to take remaining space
+  padding: 0px; // Remove padding, table will handle it
+  overflow-y: auto; // Enable scrolling ONLY for the standings area
+  position: relative; // Needed if you add sticky header later
+
+  // Basic scrollbar styling (optional, customize further)
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.5);
+  }
+}
+
+// --- "No Results" Message ---
+.noResults {
+  padding: 20px;
+  text-align: center;
+  color: $secondary-text-color;
+  font-style: italic;
+}
+
+// --- Standings Table ---
+.standingsTable {
+  width: 100%;
+  border-collapse: collapse; // Clean borders
+  font-size: 1rem;
+
+  thead {
+    // Optional: Make header sticky
+    position: sticky;
+    top: 0;
+    background-color: $header-background; // Match header or slightly different
+    z-index: 1;
+
+    tr {
+      border-bottom: 1px solid $border-color;
+    }
+
+    th {
+      padding: 10px 12px; // Padding in header cells
+      text-align: left;
+      font-weight: 600; // Bold headers
+      color: $secondary-text-color; // Slightly dimmer header text
+      text-transform: uppercase; // Uppercase headers
+      font-size: 0.8rem; // Smaller header font
+      letter-spacing: 0.5px; // Add letter spacing
+      white-space: nowrap; // Prevent headers wrapping
+    }
+  }
+
+  tbody {
+    tr.standingRow {
+      border-bottom: 1px solid rgba($border-color, 0.5); // Softer row separators
+      transition: background-color 0.15s ease-in-out; // Smooth hover transition
+
+      // Alternating row colors ("zebra stripes")
+      &:nth-child(even) {
+        background-color: $row-even-background;
+      }
+
+      &:hover {
+        background-color: $row-hover-background; // Highlight on hover
+      }
+
+      // Remove border from the very last row
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    td {
+      padding: 10px 12px; // Consistent padding with header
+      vertical-align: middle; // Align cell content vertically
+      white-space: nowrap; // Prevent content wrapping
+    }
+  }
+
+  // --- Specific Cell Styling ---
+  .positionCell {
+    text-align: left;
+    font-weight: 500;
+    min-width: 40px; // Ensure position has some space
+    font-variant-numeric: tabular-nums; // Keeps width consistent
+  }
+
+  .carNumberCell {
+  }
+
+  .driverCell {
+    font-weight: 600;
+    color: $primary-text-color; // Make driver name prominent
+    // If you add car number:
+    .carNumber {
+      display: inline-block;
+      margin-right: 8px;
+      font-size: 1em;
+      color: $secondary-text-color;
+      font-weight: 200;
+      min-width: 25px; // Give car number space
+      text-align: right;
+    }
+
+    .irating {
+      font-size: 0.9em; // Smaller font for irating
+      color: rgb(116, 202, 255);
+      background-color: rgb(255, 255, 255);
+      padding: 1px 4px;
+      border: 1px solid rgb(116, 202, 255);
+      border-radius: 4px;
+      margin-left: 5px; // Space between name and irating
+    }
+  }
+
+  .timeCell {
+    text-align: left;
+    font-family: 'Roboto Mono', monospace; // Monospaced font for times
+    font-variant-numeric: tabular-nums; // Ensures numbers align vertically
+    color: $secondary-text-color;
+  }
+}
+
+.helmetIcon {
+  width: 15px;
+  margin-right: 5px; // Space between icon and text
+  vertical-align: middle; // Align with text
+  display: inline-block; // Ensure it behaves like an inline element
+}

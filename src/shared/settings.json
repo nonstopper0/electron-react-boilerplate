@@ -1,0 +1,16 @@
+{
+  "unitType": {
+    "default": "imperial",
+    "enum": ["imperial", "metric"]
+  },
+  "fontSize": {
+    "default": 16,
+    "type": "integer",
+    "minimum": 8,
+    "maximum": 32
+  },
+  "theme": {
+    "default": "light",
+    "enum": ["light", "dark"]
+  }
+}

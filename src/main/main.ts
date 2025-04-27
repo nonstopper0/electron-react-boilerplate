@@ -12,8 +12,9 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
-import MenuBuilder from './menu';
+// import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
+import { SESSION_UPDATE_CHANNEL } from '../shared/ipcChannels';
 
 class AppUpdater {
   constructor() {
@@ -39,26 +40,26 @@ if (process.env.NODE_ENV === 'production') {
 const isDebug =
   process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
-if (isDebug) {
-  require('electron-debug').default();
-}
+// if (isDebug) {
+//   require('electron-debug').default();
+// }
 
-const installExtensions = async () => {
-  const installer = require('electron-devtools-installer');
-  const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
-  const extensions = ['REACT_DEVELOPER_TOOLS'];
+// const installExtensions = async () => {
+//   const installer = require('electron-devtools-installer');
+//   const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
+//   const extensions = ['REACT_DEVELOPER_TOOLS'];
 
-  return installer
-    .default(
-      extensions.map((name) => installer[name]),
-      forceDownload,
-    )
-    .catch(console.log);
-};
+//   return installer
+//     .default(
+//       extensions.map((name) => installer[name]),
+//       forceDownload,
+//     )
+//     .catch(console.log);
+// };
 
 const createWindow = async () => {
   if (isDebug) {
-    await installExtensions();
+    // await installExtensions();
   }
 
   const RESOURCES_PATH = app.isPackaged
@@ -70,9 +71,14 @@ const createWindow = async () => {
   };
 
   mainWindow = new BrowserWindow({
+    transparent: true,
+    y: 0,
+    x: 0,
+    width: 700,
+    height: 500,
+    frame: false,
+    alwaysOnTop: true,
     show: false,
-    width: 1024,
-    height: 728,
     icon: getAssetPath('icon.png'),
     webPreferences: {
       preload: app.isPackaged
@@ -83,6 +89,9 @@ const createWindow = async () => {
 
   mainWindow.loadURL(resolveHtmlPath('index.html'));
 
+  // open devtools window seperately
+  mainWindow.webContents.openDevTools({ mode: 'detach' });
+
   mainWindow.on('ready-to-show', () => {
     if (!mainWindow) {
       throw new Error('"mainWindow" is not defined');
@@ -91,6 +100,9 @@ const createWindow = async () => {
       mainWindow.minimize();
     } else {
       mainWindow.show();
+
+      console.log(mainWindow.getContentSize());
+      console.log(mainWindow.getMinimumSize());
     }
   });
 
@@ -98,8 +110,8 @@ const createWindow = async () => {
     mainWindow = null;
   });
 
-  const menuBuilder = new MenuBuilder(mainWindow);
-  menuBuilder.buildMenu();
+  // const menuBuilder = new MenuBuilder(mainWindow);
+  // menuBuilder.buildMenu();
 
   // Open urls in the user's browser
   mainWindow.webContents.setWindowOpenHandler((edata) => {
@@ -117,17 +129,48 @@ const createWindow = async () => {
  */
 
 app.on('window-all-closed', () => {
-  // Respect the OSX convention of having the application in memory even
+  // Respect the OSX convention of having the application in memory evenf
   // after all windows have been closed
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
 
+function initializeIracing() {
+  const irsdk = require('iracing-sdk-js');
+
+  irsdk.init({
+    telemetryUpdateInterval: 10,
+    sessionInfoUpdateInterval: 500,
+  });
+
+  const iracing = irsdk.getInstance();
+
+  console.info('\nWaiting for iRacing to start...');
+
+  iracing.on('Connected', () => {
+    console.info('Connected to iRacing');
+  });
+
+  iracing.on('Disconnected', () => {
+    console.info('Disconnected from iRacing');
+  });
+
+  iracing.on('SessionInfo', (sessionInfo: any) => {
+    console.info('Session Info:', sessionInfo);
+    // Send session info to renderer process
+    if (mainWindow) {
+      mainWindow.webContents.send(SESSION_UPDATE_CHANNEL, sessionInfo);
+    }
+  });
+}
+
 app
   .whenReady()
   .then(() => {
+    initializeIracing();
     createWindow();
+
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
