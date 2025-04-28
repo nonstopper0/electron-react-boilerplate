@@ -89,6 +89,7 @@ export interface ISessionInfo {
       };
     };
     SessionInfo: {
+      CurrentSessionNum: number;
       Sessions: Array<{
         SessionNum: number;
         SessionLaps: string;

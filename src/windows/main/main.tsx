@@ -1,7 +1,7 @@
 import * as styles from './mainStyles.module.scss';
 import { ISessionInfo } from '../../types/iracing-sdk/sessionInfo';
 import useSession from '../../hooks/iracing/useSession';
-import { celcToFahr } from '../../utils/celcToFahr.ts';
+import { celcToFahr } from '../../utils/celcToFahr';
 import helmetLogo from '../../renderer/assets/icons/helmet.svg';
 
 export default function Main() {
@@ -44,7 +44,11 @@ export default function Main() {
             {/* Improved formatting & fallback */}
           </p>
           <p className={styles.eventType}>
-            {session.data.WeekendInfo.EventType || 'Session'}
+            {
+              session.data.SessionInfo.Sessions[
+                session.data.SessionInfo.CurrentSessionNum
+              ].SessionType
+            }
           </p>{' '}
           {/* Added fallback */}
         </div>
@@ -60,12 +64,17 @@ interface StandingsProps {
 }
 
 function Standings({ sessionData }: StandingsProps) {
-  const currentSessionIndex = sessionData.SessionInfo.Sessions.length - 1;
+  const currentSessionIndex = sessionData.SessionInfo.CurrentSessionNum;
   const currentSession = sessionData.SessionInfo.Sessions[currentSessionIndex];
   const results = currentSession?.ResultsPositions || [];
   const drivers = sessionData.DriverInfo.Drivers || [];
   const driverIratings = [...drivers].map((driver) => driver.IRating); // Extract iRating from drivers
-  console.log(driverIratings); // Log iRating for debugging
+  // console.log(driverIratings); // Log iRating for debugging
+  console.log(sessionData);
+  if (currentSession.SessionType === 'Race') {
+    results.sort((a, b) => a.Position - b.Position); // Sort by position
+  }
+
   if (results.length === 0) {
     return (
       <div className={styles.standings}>
@@ -97,7 +106,6 @@ function Standings({ sessionData }: StandingsProps) {
             .sort((a, b) => a.Position - b.Position)
             .map((result) => {
               const driver = drivers.find((d) => d.CarIdx === result.CarIdx);
-              console.log(driver);
               const driverName = driver?.UserName || `Car #${result.CarIdx}`; // Fallback
               const fastestTime =
                 result.FastestTime > 0
